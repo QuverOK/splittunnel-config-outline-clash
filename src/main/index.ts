@@ -108,7 +108,7 @@ app.whenReady().then(() => {
         const clashConfig = generateClashConfig(parsedSs, executables)
         const savedPath = await saveConfig(clashConfig, outputDir)
 
-        return { success: true, message: `✅ YAML создан: ${savedPath}` }
+        return { success: true, message: `YAML создан: ${savedPath}` }
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Произошла неизвестная ошибка'
         return { success: false, message: `Ошибка: ${message}` }
