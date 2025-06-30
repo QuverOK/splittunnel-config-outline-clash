@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: package
+appId: com.quverok.clash-split-tunnel
+productName: Clash Split Tunnel
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: package
+  executableName: ClashSplitTunnel
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
