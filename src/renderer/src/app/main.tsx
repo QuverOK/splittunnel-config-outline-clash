@@ -1,11 +1,11 @@
-import { Button } from '@renderer/shared/ui'
 import './main.css'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { MainPage } from '@renderer/pages'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Button className="text-red-500">Hello world</Button>
+    <MainPage />
   </StrictMode>
 )
