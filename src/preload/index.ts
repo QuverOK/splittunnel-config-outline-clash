@@ -3,8 +3,9 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  generateConfig: (ssLink: string, exeList: string) =>
-    ipcRenderer.invoke('generate-config', ssLink, exeList)
+  selectFolder: (): Promise<string | undefined> => ipcRenderer.invoke('select-folder'),
+  generateConfig: (ssLink: string, exeList: string, outputDir?: string | null) =>
+    ipcRenderer.invoke('generate-config', ssLink, exeList, outputDir)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

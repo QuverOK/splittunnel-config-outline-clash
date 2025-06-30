@@ -18,6 +18,7 @@ import {
 } from '@renderer/shared/ui/form'
 import { Input } from '@renderer/shared/ui/input'
 import { Textarea } from '@renderer/shared/ui/textarea'
+import { Label } from '@renderer/shared/ui/label'
 
 const formSchema = z.object({
   ssLink: z.string().min(1, {
@@ -33,6 +34,7 @@ export const ConfigForm = (): ReactElement => {
     success?: boolean
     message?: string
   } | null>(null)
+  const [outputPath, setOutputPath] = useState<string | null>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,9 +44,16 @@ export const ConfigForm = (): ReactElement => {
     }
   })
 
+  const handleSelectFolder = async (): Promise<void> => {
+    const selectedPath = await window.api.selectFolder()
+    if (selectedPath) {
+      setOutputPath(selectedPath)
+    }
+  }
+
   const onSubmit = async (values: z.infer<typeof formSchema>): Promise<void> => {
     setStatus(null)
-    const result = await window.api.generateConfig(values.ssLink, values.exeList)
+    const result = await window.api.generateConfig(values.ssLink, values.exeList, outputPath)
     setStatus(result)
   }
 
@@ -85,6 +94,17 @@ export const ConfigForm = (): ReactElement => {
             </FormItem>
           )}
         />
+        <div className="space-y-2">
+          <Label>Папка для сохранения</Label>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" onClick={handleSelectFolder}>
+              Выбрать...
+            </Button>
+            <p className="text-sm text-muted-foreground truncate">
+              {outputPath || 'По умолчанию: папка output в каталоге приложения'}
+            </p>
+          </div>
+        </div>
         <Button type="submit">Сгенерировать</Button>
       </form>
       {status && (

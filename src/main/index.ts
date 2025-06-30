@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -6,9 +6,11 @@ import { parseSsUrl } from './features/parse-ss'
 import { generateClashConfig } from './features/generate-clash-config'
 import { saveConfig } from './features/save-config'
 
+let mainWindow: BrowserWindow
+
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -55,27 +57,40 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  ipcMain.handle('generate-config', async (_, ssLink: string, exeList: string) => {
-    try {
-      const parsedSs = parseSsUrl(ssLink)
-      const executables = exeList
-        .split(/[\n,]+/)
-        .map((exe) => exe.trim())
-        .filter(Boolean)
-
-      if (executables.length === 0) {
-        throw new Error('No executables provided')
-      }
-
-      const clashConfig = generateClashConfig(parsedSs, executables)
-      await saveConfig(clashConfig)
-
-      return { success: true, message: '✅ YAML создан успешно' }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Произошла неизвестная ошибка'
-      return { success: false, message: `Ошибка: ${message}` }
+  ipcMain.handle('select-folder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory']
+    })
+    if (result.canceled) {
+      return undefined
     }
+    return result.filePaths[0]
   })
+
+  ipcMain.handle(
+    'generate-config',
+    async (_, ssLink: string, exeList: string, outputDir?: string | null) => {
+      try {
+        const parsedSs = parseSsUrl(ssLink)
+        const executables = exeList
+          .split(/[\n,]+/)
+          .map((exe) => exe.trim())
+          .filter(Boolean)
+
+        if (executables.length === 0) {
+          throw new Error('Не указаны исполняемые файлы')
+        }
+
+        const clashConfig = generateClashConfig(parsedSs, executables)
+        const savedPath = await saveConfig(clashConfig, outputDir)
+
+        return { success: true, message: `✅ YAML создан: ${savedPath}` }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Произошла неизвестная ошибка'
+        return { success: false, message: `Ошибка: ${message}` }
+      }
+    }
+  )
 
   createWindow()
 
