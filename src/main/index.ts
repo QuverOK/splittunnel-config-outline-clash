@@ -2,6 +2,9 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { parseSsUrl } from './features/parse-ss'
+import { generateClashConfig } from './features/generate-clash-config'
+import { saveConfig } from './features/save-config'
 
 function createWindow(): void {
   // Create the browser window.
@@ -51,6 +54,28 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  ipcMain.handle('generate-config', async (_, ssLink: string, exeList: string) => {
+    try {
+      const parsedSs = parseSsUrl(ssLink)
+      const executables = exeList
+        .split(/[\n,]+/)
+        .map((exe) => exe.trim())
+        .filter(Boolean)
+
+      if (executables.length === 0) {
+        throw new Error('No executables provided')
+      }
+
+      const clashConfig = generateClashConfig(parsedSs, executables)
+      await saveConfig(clashConfig)
+
+      return { success: true, message: '✅ YAML создан успешно' }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Произошла неизвестная ошибка'
+      return { success: false, message: `Ошибка: ${message}` }
+    }
+  })
 
   createWindow()
 

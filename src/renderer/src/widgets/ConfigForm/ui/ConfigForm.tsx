@@ -2,7 +2,9 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import type { ReactElement } from 'react'
 import * as z from 'zod'
+import { useState } from 'react'
 
 import { Button } from '@renderer/shared/ui/button'
 import {
@@ -26,7 +28,12 @@ const formSchema = z.object({
   })
 })
 
-export const ConfigForm = (): JSX.Element => {
+export const ConfigForm = (): ReactElement => {
+  const [status, setStatus] = useState<{
+    success?: boolean
+    message?: string
+  } | null>(null)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,9 +42,10 @@ export const ConfigForm = (): JSX.Element => {
     }
   })
 
-  const onSubmit = (values: z.infer<typeof formSchema>): void => {
-    // TODO: implement IPC call
-    console.log(values)
+  const onSubmit = async (values: z.infer<typeof formSchema>): Promise<void> => {
+    setStatus(null)
+    const result = await window.api.generateConfig(values.ssLink, values.exeList)
+    setStatus(result)
   }
 
   return (
@@ -46,7 +54,7 @@ export const ConfigForm = (): JSX.Element => {
         <FormField
           control={form.control}
           name="ssLink"
-          render={({ field }): JSX.Element => (
+          render={({ field }): ReactElement => (
             <FormItem>
               <FormLabel>SS Link</FormLabel>
               <FormControl>
@@ -60,7 +68,7 @@ export const ConfigForm = (): JSX.Element => {
         <FormField
           control={form.control}
           name="exeList"
-          render={({ field }): JSX.Element => (
+          render={({ field }): ReactElement => (
             <FormItem>
               <FormLabel>Список EXE файлов</FormLabel>
               <FormControl>
@@ -79,6 +87,11 @@ export const ConfigForm = (): JSX.Element => {
         />
         <Button type="submit">Сгенерировать</Button>
       </form>
+      {status && (
+        <p className={`mt-4 text-sm ${status.success ? 'text-green-500' : 'text-red-500'}`}>
+          {status.message}
+        </p>
+      )}
     </Form>
   )
 }
