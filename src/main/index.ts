@@ -1,5 +1,6 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
+import { promises as fs } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { parseSsUrl } from './features/parse-ss'
@@ -71,6 +72,29 @@ app.whenReady().then(() => {
     'generate-config',
     async (_, ssLink: string, exeList: string, outputDir?: string | null) => {
       try {
+        const defaultDir = join(app.getAppPath(), 'output')
+        const targetDir = outputDir || defaultDir
+        const finalPath = join(targetDir, 'clash_config.yaml')
+
+        try {
+          await fs.access(finalPath)
+          const { response } = await dialog.showMessageBox(mainWindow, {
+            type: 'question',
+            buttons: ['Перезаписать', 'Отмена'],
+            defaultId: 0,
+            cancelId: 1,
+            title: 'Подтверждение',
+            message: `Файл clash_config.yaml уже существует. Перезаписать?`
+          })
+
+          if (response === 1) {
+            // User cancelled
+            return { success: false, message: 'Операция отменена пользователем.' }
+          }
+        } catch {
+          // File doesn't exist, no need to ask for confirmation.
+        }
+
         const parsedSs = parseSsUrl(ssLink)
         const executables = exeList
           .split(/[\n,]+/)
