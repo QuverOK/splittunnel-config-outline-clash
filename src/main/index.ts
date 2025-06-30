@@ -12,6 +12,7 @@ let mainWindow: BrowserWindow
 function createWindow(): void {
   // Create the browser window.
   mainWindow = new BrowserWindow({
+    title: 'Clash Split Tunnel',
     width: 900,
     height: 670,
     show: false,
@@ -92,7 +93,7 @@ app.whenReady().then(() => {
             return { success: false, message: 'Операция отменена пользователем.' }
           }
         } catch {
-          // File doesn't exist, no need to ask for confirmation.
+          // File doesn't exist, no need to ask for confirmation.g
         }
 
         const parsedSs = parseSsUrl(ssLink)
